@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>🐱 Galería de Gatitos Async/Await</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f4f6f9;
+      color: #333;
+      margin: 0;
+      padding: 0;
+      text-align: center;
+    }
+    h1 {
+      background-color: #ffb6c1;
+      color: #333;
+      margin: 0;
+      padding: 1rem;
+    }
+    .filtros {
+      margin: 1rem;
+    }
+    select, input, button {
+      margin: 0.5rem;
+      padding: 0.5rem;
+      font-size: 1rem;
+    }
+    .galeria {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 1rem;
+      padding: 1rem;
+    }
+    .gatito {
+      background-color: white;
+      border-radius: 10px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+      overflow: hidden;
+      transition: transform 0.2s;
+    }
+    .gatito:hover {
+      transform: scale(1.05);
+    }
+    .gatito img {
+      width: 100%;
+      height: 200px;
+      object-fit: cover;
+    }
+    .loading, .error {
+      margin-top: 2rem;
+      font-size: 1.2rem;
+    }
+    .spinner {
+      width: 40px;
+      height: 40px;
+      border: 5px solid #ddd;
+      border-top: 5px solid #ff6f91;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin: 0 auto 10px;
+    }
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+  </style>
+</head>
+<body>
+
+  <h1>🐾 Galería de Gatitos</h1>
+
+  <div class="filtros">
+    <label for="cantidad">Cantidad:</label>
+    <input type="number" id="cantidad" min="1" max="10" value="3">
+
+    <label for="categoria">Categoría:</label>
+    <select id="categoria">
+      <option value="">Aleatorio</option>
+      <option value="1">Sillones</option>
+      <option value="5">Caja</option>
+      <option value="15">Sombreros</option>
+    </select>
+
+    <button onclick="cargarGatitos()">Mostrar Gatitos 😺</button>
+  </div>
+
+  <div id="galeria" class="galeria"></div>
+
+  <script>
+    const galeriaDiv = document.getElementById('galeria');
+    const cantidadInput = document.getElementById('cantidad');
+    const categoriaSelect = document.getElementById('categoria');
+
+    // ✅ Función principal con async/await
+    async function cargarGatitos() {
+      // Paso 1: Obtener valores
+      const cantidad = cantidadInput.value;
+      const categoria = categoriaSelect.value;
+      
+      // Paso 2: Mostrar loading
+      galeriaDiv.innerHTML = `
+        <div class="loading">
+          <div class="spinner"></div>
+          <p>Cargando gatitos adorables...</p>
+        </div>
+      `;
+      
+      // Paso 3: Construir URL base y parámetros
+      const baseURL = 'https://api.thecatapi.com/v1/images/search';
+      const params = new URLSearchParams();
+      params.append('limit', cantidad);
+      if (categoria) params.append('category_ids', categoria);
+
+      const url = `${baseURL}?${params.toString()}`;
+
+      try {
+        // Paso 4: Hacer fetch con await
+        const respuesta = await fetch(url);
+
+        // Paso 5: Verificar respuesta.ok
+        if (!respuesta.ok) {
+          throw new Error(`Error HTTP ${respuesta.status}`);
+        }
+
+        // Paso 6: Convertir a JSON con await
+        const gatos = await respuesta.json();
+
+        // Paso 7: Llamar a mostrarGatos(gatos)
+        mostrarGatos(gatos);
+
+      } catch (error) {
+        // Paso 8: Manejar errores
+        galeriaDiv.innerHTML = `
+          <div class="error">
+            <h3>😿 Error</h3>
+            <p>${error.message}</p>
+          </div>
+        `;
+      }
+    }
+
+    // Función auxiliar para mostrar los gatos
+    function mostrarGatos(gatos) {
+      galeriaDiv.innerHTML = gatos.map(gato => `
+        <div class="gatito">
+          <img src="${gato.url}" alt="Gatito adorable">
+        </div>
+      `).join('');
+    }
+  </script>
+
+</body>
+</html>
